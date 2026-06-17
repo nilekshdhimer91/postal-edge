@@ -2,13 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY DNA.Email.sln* .
 COPY Directory.Packages.props .
 COPY Directory.Build.props .
 COPY src/DNA.Email.Core/DNA.Email.Core.csproj src/DNA.Email.Core/
 COPY src/DNA.Email.API/DNA.Email.API.csproj src/DNA.Email.API/
 
-RUN dotnet restore
+RUN dotnet restore src/DNA.Email.API/DNA.Email.API.csproj
 
 COPY . .
 
@@ -30,8 +29,8 @@ COPY --from=build --chown=appuser:appgroup /app/publish .
 
 USER appuser
 
-EXPOSE 8079
-ENV ASPNETCORE_URLS=http://+:8079
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 ENTRYPOINT ["dotnet", "DNA.Email.API.dll"]
