@@ -1,0 +1,35 @@
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+.vs/
+.idea/
+*.DS_Store
+
+# Secrets / environment
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.Local.json
+
+# NuGet
+*.nupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Certificates — never commit
+certs/
+*.pfx
+*.p12
+*.pem
+!*.example.pem
+
+# Publish output
+publish/
+/.claude

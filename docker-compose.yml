@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  dna-email-api:
+    build:
+      context: .
+      dockerfile: src/DNA.Email.API/Dockerfile
+    container_name: dna-email-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+
+      # ── SMTP (server-level fallback; callers can override per-request) ──────
+      - Smtp__Host=${SMTP_HOST:-}
+      - Smtp__Port=${SMTP_PORT:-587}
+      - Smtp__EnableSsl=${SMTP_ENABLE_SSL:-true}
+      - Smtp__Username=${SMTP_USERNAME:-}
+      - Smtp__Password=${SMTP_PASSWORD:-}
+      - Smtp__DisplayName=${SMTP_DISPLAY_NAME:-DNA Lab}
+      - Smtp__TimeoutMs=${SMTP_TIMEOUT_MS:-30000}
+
+      # ── API Keys (index-based; add more __1__, __2__ blocks as needed) ──────
+      - ApiKey__HeaderName=X-Api-Key
+      - ApiKey__Keys__0__Key=${API_KEY_0_VALUE:-change-me-key-0}
+      - ApiKey__Keys__0__Name=${API_KEY_0_NAME:-Default}
+      - ApiKey__Keys__0__RateLimit__PermitLimit=${API_KEY_0_RATE_LIMIT:-100}
+      - ApiKey__Keys__0__RateLimit__WindowSeconds=${API_KEY_0_WINDOW_SECONDS:-60}
+      - ApiKey__Keys__0__RateLimit__QueueLimit=${API_KEY_0_QUEUE_LIMIT:-0}
+      # Second key (optional — remove if not needed)
+      - ApiKey__Keys__1__Key=${API_KEY_1_VALUE:-}
+      - ApiKey__Keys__1__Name=${API_KEY_1_NAME:-}
+      - ApiKey__Keys__1__RateLimit__PermitLimit=${API_KEY_1_RATE_LIMIT:-1000}
+      - ApiKey__Keys__1__RateLimit__WindowSeconds=${API_KEY_1_WINDOW_SECONDS:-60}
+      - ApiKey__Keys__1__RateLimit__QueueLimit=${API_KEY_1_QUEUE_LIMIT:-10}
+
+      # ── DKIM signing (optional) ──────────────────────────────────────────────
+      - Dkim__Enabled=${DKIM_ENABLED:-false}
+      - Dkim__Domain=${DKIM_DOMAIN:-}
+      - Dkim__Selector=${DKIM_SELECTOR:-mail}
+      - Dkim__PrivateKeyPem=${DKIM_PRIVATE_KEY_PEM:-}
+
+      # ── S/MIME signing (optional — mount cert via volume) ───────────────────
+      - Smime__Enabled=${SMIME_ENABLED:-false}
+      - Smime__CertificatePath=/app/certs/smime.pfx
+      - Smime__CertificatePassword=${SMIME_CERT_PASSWORD:-}
+
+      # ── CORS ─────────────────────────────────────────────────────────────────
+      - Cors__AllowedOrigins__0=${CORS_ORIGIN_0:-*}
+
+      # ── Request size limit (bytes; default 50 MB) ────────────────────────────
+      - Limits__MaxRequestBodyBytes=${MAX_REQUEST_BYTES:-52428800}
+
+    volumes:
+      # Mount S/MIME certificates — never bake certs into the image
+      - type: bind
+        source: ./certs
+        target: /app/certs
+        read_only: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── Local SMTP test server (development only) ────────────────────────────
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP
+    profiles:
+      - dev

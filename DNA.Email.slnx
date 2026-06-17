@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DNA.Email.API/DNA.Email.API.csproj" />
+    <Project Path="src/DNA.Email.Core/DNA.Email.Core.csproj" />
+  </Folder>
+</Solution>
