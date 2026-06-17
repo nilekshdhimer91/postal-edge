@@ -28,7 +28,6 @@ services:
       - ApiKey__Keys__0__RateLimit__PermitLimit=${API_KEY_0_RATE_LIMIT:-100}
       - ApiKey__Keys__0__RateLimit__WindowSeconds=${API_KEY_0_WINDOW_SECONDS:-60}
       - ApiKey__Keys__0__RateLimit__QueueLimit=${API_KEY_0_QUEUE_LIMIT:-0}
-      # Second key (optional — remove if not needed)
       - ApiKey__Keys__1__Key=${API_KEY_1_VALUE:-}
       - ApiKey__Keys__1__Name=${API_KEY_1_NAME:-}
       - ApiKey__Keys__1__RateLimit__PermitLimit=${API_KEY_1_RATE_LIMIT:-1000}
@@ -41,7 +40,7 @@ services:
       - Dkim__Selector=${DKIM_SELECTOR:-mail}
       - Dkim__PrivateKeyPem=${DKIM_PRIVATE_KEY_PEM:-}
 
-      # ── S/MIME signing (optional — mount cert via volume) ───────────────────
+      # ── S/MIME signing (optional) ────────────────────────────────────────────
       - Smime__Enabled=${SMIME_ENABLED:-false}
       - Smime__CertificatePath=/app/certs/smime.pfx
       - Smime__CertificatePassword=${SMIME_CERT_PASSWORD:-}
@@ -53,27 +52,24 @@ services:
       - Limits__MaxRequestBodyBytes=${MAX_REQUEST_BYTES:-52428800}
 
     volumes:
-      # S/MIME certificates — on Coolify, configure this as a bind mount in the UI
-      # pointing your VPS path (e.g. /srv/postal-edge/certs) to /app/certs
-      # Remove this block entirely if not using S/MIME
       - certs:/app/certs:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
-volumes:
-  certs:
-
-  # ── Local SMTP test server (development only) ────────────────────────────
+  # ── Local SMTP test server (development only — not started in production) ──
   mailpit:
     image: axllent/mailpit:latest
     container_name: mailpit
     restart: unless-stopped
     ports:
-      - "8025:8025"  # Web UI
-      - "1025:1025"  # SMTP
+      - "8025:8025"
+      - "1025:1025"
     profiles:
       - dev
+
+volumes:
+  certs:
