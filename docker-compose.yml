@@ -1,14 +1,10 @@
-version: "3.9"
-
 services:
   dna-email-api:
     build:
       context: .
       dockerfile: src/DNA.Email.API/Dockerfile
-    container_name: dna-email-api
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
 
@@ -54,20 +50,18 @@ services:
     volumes:
       - certs:/app/certs:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
 
-  # ── Local SMTP test server (development only — not started in production) ──
+  # ── Local SMTP test server (development only — activate with: --profile dev) ──
   mailpit:
     image: axllent/mailpit:latest
-    container_name: mailpit
-    restart: unless-stopped
-    ports:
-      - "8025:8025"
-      - "1025:1025"
+    expose:
+      - "8025"
+      - "1025"
     profiles:
       - dev
 
