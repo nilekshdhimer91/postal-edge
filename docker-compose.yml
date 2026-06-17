@@ -53,17 +53,19 @@ services:
       - Limits__MaxRequestBodyBytes=${MAX_REQUEST_BYTES:-52428800}
 
     volumes:
-      # Mount S/MIME certificates — never bake certs into the image
-      - type: bind
-        source: ./certs
-        target: /app/certs
-        read_only: true
+      # S/MIME certificates — on Coolify, configure this as a bind mount in the UI
+      # pointing your VPS path (e.g. /srv/postal-edge/certs) to /app/certs
+      # Remove this block entirely if not using S/MIME
+      - certs:/app/certs:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+
+volumes:
+  certs:
 
   # ── Local SMTP test server (development only) ────────────────────────────
   mailpit:
